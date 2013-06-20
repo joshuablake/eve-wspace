@@ -15,13 +15,20 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 from core.models import ConfigEntry
+from core.request_cache import get_request_cache
 
 def get_config(name, user):
     """
     Gets the correct config value for the given key name.
     Value with the given user has priority over any default value.
     """
+    cache = get_request_cache()
     try:
-        return ConfigEntry.objects.get(name=name, user=user)
-    except ConfigEntry.DoesNotExist:
-        return ConfigEntry.objects.get(name=name, user=None)
+        return cache[name]
+    except KeyError:
+        try:
+            value = ConfigEntry.objects.get(name=name, user=user)
+        except ConfigEntry.DoesNotExist:
+            value = ConfigEntry.objects.get(name=name, user=None)
+        cache[name] = value
+        return value
