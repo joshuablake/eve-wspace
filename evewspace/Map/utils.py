@@ -15,12 +15,9 @@
 #    You should have received a copy of the GNU General Public License
 #    along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #from Map.models import *
-from collections import defaultdict
-from core.models import SystemJump, Type, Location
 from core.utils import get_config
 from datetime import timedelta
 from django.conf import settings
-from django.contrib.sites.models import Site
 from django.core.cache import cache
 from math import pow, sqrt
 import datetime
@@ -85,7 +82,16 @@ class MapJSONGenerator(object):
         pvp_threshold = self.pvp_threshold
         npc_threshold = self.npc_threshold
         staticPrefix = "%s" % (settings.STATIC_URL + "images/")
-        if system.system.active_pilots.filter(user=self.user).exists():
+        try:
+            current_loc = self._user_loc
+        except AttributeError:
+            from Map.models import ActivePilot
+            try:
+                current_loc = ActivePilot.objects.get(user=self.user).system
+            except ActivePilot.DoesNotExist:
+                current_loc = []
+            self._user_loc = current_loc
+        if system.system in current_loc:
             return staticPrefix + "mylocation.png"
 
         if system.system.stfleets.filter(ended__isnull=True).exists():
@@ -161,7 +167,8 @@ class MapJSONGenerator(object):
         if cached == None:
             self.systems = defaultdict(list)
             for system in self.map.systems.all()\
-                    .select_related('system', 'parentsystem', 'parent_womrhole')\
+                    .select_related('system', 'parentsystem',
+                        'parent_wormhole__top_type', 'parent_wormhole__bottom_type')\
                     .iterator():
                 self.systems[system.parentsystem_id].append(system)
             root = self.systems[None][0]

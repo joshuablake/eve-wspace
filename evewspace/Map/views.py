@@ -118,8 +118,8 @@ def map_refresh(request, map_id):
     Returns an HttpResponse with the updated systemJSON for an asynchronous
     map refresh.
     """
-    if not request.is_ajax():
-        raise PermissionDenied
+#     if not request.is_ajax():
+#         raise PermissionDenied
     current_map = get_object_or_404(Map, pk=map_id)
     result = [
         datetime.strftime(datetime.now(pytz.utc),
@@ -127,7 +127,7 @@ def map_refresh(request, map_id):
         utils.MapJSONGenerator(current_map,
                                request.user).get_systems_json()
     ]
-    return HttpResponse(json.dumps(result))
+    return HttpResponse('<body>'+json.dumps(result)+'</body>')
 
 
 def _checkin_igb_trusted(request, current_map):
