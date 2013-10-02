@@ -1,10 +1,9 @@
-!#/bin/bash
+#!/bin/bash
 
-curl -O http://www.fuzzwork.co.uk/dump/mysql55-retribution-1.1-84566.tbz2
-bunzip2 mysql55-retribution-1.1-84566.tbz2
-tar xvf mysql55-retribution-1.1-84566.tar
-mysql -u root -D djangotest < retribution-1.1-84566/mysql55-retribution-1.1-84566.sql
-rm /home/vagrant/mysql55-inferno12-extended.sql
+curl -O http://www.fuzzwork.co.uk/dump/mysql55-odyssey-1.0-89097.tbz2
+tar xvjf /vagrant/puppet/scripts/mysql55-odyssey-1.0-89097.tbz2
+mysql -u root -D djangotest < /vagrant/puppet/scripts/odyssey-1.0-89097/mysql55-odyssey-1.0-89097.dmp
+rm -rf /vagrant/puppet/scripts/odyssey-1.0-89097
 /vagrant/evewspace/manage.py syncdb --noinput
 /vagrant/evewspace/manage.py migrate
 /vagrant/evewspace/manage.py buildsystemdata

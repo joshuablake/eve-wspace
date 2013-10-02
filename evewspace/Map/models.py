@@ -94,6 +94,12 @@ class System(SystemData):
     def is_wspace(self):
         return self.sysclass < 7
 
+    def get_spec(self):
+        if self.sysclass < 7:
+            return self.wsystem
+        else:
+            return self.ksystem
+
     def save(self, *args, **kwargs):
         # Make sure any new lines in info or occupied are replaced with <br />
         self.info = self.info.replace("\n", "<br />")
@@ -293,7 +299,7 @@ class MapSystem(models.Model):
             raise ValueError("Cannot remove the root system.")
         if self.system.maps.count() == 1:
             self.system.signatures.all().delete()
-        self.parent_wormholes.all().delete()
+        self.parent_wormhole.delete()
         for system in self.childsystems.all():
             system.remove_system(user)
         self.map.add_log(user, "Removed system: %s (%s)" % (self.system.name,
@@ -311,7 +317,7 @@ class Wormhole(models.Model):
     top = models.ForeignKey(MapSystem, related_name='child_wormholes')
     top_type = models.ForeignKey(WormholeType, related_name='+')
     top_bubbled = models.NullBooleanField(null=True, blank=True)
-    bottom = models.ForeignKey(MapSystem, null=True, related_name='parent_wormholes')
+    bottom = models.OneToOneField(MapSystem, null=True, related_name='parent_wormhole')
     bottom_type = models.ForeignKey(WormholeType, related_name='+')
     bottom_bubbled = models.NullBooleanField(null=True, blank=True)
     time_status = models.IntegerField(choices = ((0, "Fine"), (1, "End of Life")))
@@ -421,7 +427,7 @@ class Signature(models.Model):
         """
         Ensure that Sig IDs are proper.
         """
-        self.sigid = self.sigid[:3].upper()
+        self.sigid = utils.convert_signature_id(self.sigid)
         super(Signature, self).save(*args, **kwargs)
 
 class MapPermission(models.Model):
